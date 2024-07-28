@@ -1,14 +1,25 @@
 const express = require('express')
 const app = express()
 const fs = require('fs')
+const morgan = require('morgan')
+
+// 1. Middleware
+app.use(morgan('dev'))
 
 app.use(express.json())
+
+app.use((req, res, next) => {
+  // console.log('Testing middleware...')
+  next()
+})
 
 const port = 3000
 
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`, 'utf-8'))
 
-app.get('/api/v1/tours', (req, res) => {
+// 2.ROUTE handle
+
+const getAllTours = (req, res) => {
   res.status(200).json({
     status: 'success',
     results: tours.length,
@@ -16,8 +27,9 @@ app.get('/api/v1/tours', (req, res) => {
       tours
     }
   })
-})
-app.get('/api/v1/tours/:id', (req, res) => {
+}
+
+const getTourById = (req, res) => {
   const id = req.params.id * 1
   if (id > tours.length) {
     return res.status(404).json({
@@ -32,8 +44,9 @@ app.get('/api/v1/tours/:id', (req, res) => {
       tour
     }
   })
-})
-app.post('/api/v1/tours', (req, res) => {
+}
+
+const postTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1
   const newTour = Object.assign({id: newId}, req.body)
   tours.push(newTour)
@@ -45,9 +58,9 @@ app.post('/api/v1/tours', (req, res) => {
       }
     })
   })
-})
+}
 
-app.patch('/api/v1/tours/:id', (req, res) => {
+const editTour = (req, res) => {
   const id = req.params.id * 1
   if (id > tours.length) {
     return res.status(404).json({
@@ -61,8 +74,9 @@ app.patch('/api/v1/tours/:id', (req, res) => {
       tour: ''
     }
   })
-})
-app.delete('/api/v1/tours/:id', (req, res) => {
+}
+
+const deleteTour = (req, res) => {
   const id = req.params.id * 1
   if (id > tours.length) {
     return res.status(404).json({
@@ -74,7 +88,17 @@ app.delete('/api/v1/tours/:id', (req, res) => {
     status: 'success',
     data: null
   })
-})
+}
+
+// 3.Route
+
+app.route('/api/v1/tours')
+  .get(getAllTours)
+  .post(postTour)
+app.route('/api/v1/tours/:id')
+  .get(getTourById)
+  .patch(editTour)
+  .delete(deleteTour)
 
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`)
