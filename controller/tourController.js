@@ -56,26 +56,37 @@ exports.postTour = async (req, res) => {
   }
 }
 
-exports.editTour = (req, res) => {
-  const id = req.params.id * 1
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Invalid ID.'
+exports.editTour = async (req, res) => {
+  try {
+    const tour = Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,// return new updated document to client,
+      runValidators: true
+    })
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour
+      }
+    })
+  } catch (error) {
+    res.status(400).json({
+      status: 'failed',
+      message: 'Some thing wrong'
     })
   }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: ''
-    }
-  })
 }
 
-exports.deleteTour = (req, res) => {
-  const id = req.params.id * 1
-  res.status(204).json({
-    status: 'success',
-    data: null
-  })
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id)
+    return res.status(200).json({
+      status: 'success',
+      message: 'Xoa thanh cong'
+    })
+  } catch (error) {
+    res.status(400).json({
+      status: 'failed',
+      message: 'Some thing wrong'
+    })
+  }
 }
