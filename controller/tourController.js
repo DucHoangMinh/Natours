@@ -5,7 +5,29 @@ const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-si
 
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find()
+    // 1.Filtering
+    const queryObject = {...req.query}
+    const excludedField = ['page', 'sort', 'limit', 'fields']
+    excludedField.forEach(el => delete queryObject[el])
+
+    // 2. Advanced filtering (<=, >=)
+    let queryStr = JSON.stringify(queryObject)
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`)
+
+    let query = Tour.find(JSON.parse(queryStr))
+
+    // 3. Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ')
+      query = query.sort(sortBy)
+    } else {
+      query = query.sort('-createdAt')
+    }
+
+    const tours = await query
+    // const tours = await Tour.find()
+    //   .where('duration').equals(5)
+    //   .where('difficulty').equals('easy')
     res.status(200).json({
       status: 'success',
       results: tours.length,
