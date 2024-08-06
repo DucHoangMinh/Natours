@@ -11,6 +11,8 @@ const router = express.Router()
 // If not, send back 400 (bad request)
 // Add it to the post handleware stack
 
+
+
 router.route('/')
   .get(tourController.getAllTours)
   .post(tourController.postTour) //Viet 2 ham the nay la thuc hien tuan tu
