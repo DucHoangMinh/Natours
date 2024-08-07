@@ -105,3 +105,42 @@ exports.aliasTopTours = async (req, res, next) => {
   req.query.fields = 'name,price'
   next()
 }
+
+exports.getTourStats = async (req, res) => {
+  try {
+    // Pass an array to define stages that data go through
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } } // Match nhu kieu filter, lay nhung cai nao co rating lon hon 4.5
+      },
+      {
+        $group: { // Group document together by accumulator
+          _id: '$difficulty', // Everything in one group
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+          numRating: { $sum: '$ratingsQuantity' },
+          numTours: { $sum: 1 },
+        }
+      },
+      {
+        $sort: { avgPrice: 1 } // Su dung ten truong dinh nghia o tren, 1 for asc
+      },
+      {
+        $match: { _id: { $ne: 'easy' } }
+      }
+    ])
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats
+      }
+    })
+  } catch (err) {
+    res.status(400).json({
+      status: 'failed',
+      message: 'Some thing wrong'
+    })
+  }
+}
