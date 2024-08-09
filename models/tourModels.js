@@ -51,6 +51,22 @@ const tourSchema = new mongoose.Schema({
     select: false
   },
   startDates: [Date]
+}, {
+  toJSON: {
+    virtuals: true,
+  }, toObject: {
+    virtuals: true
+  }
+})
+
+tourSchema.virtual('durationWeek').get(function(){
+  return this.duration / 7
+})
+
+// DOCUMENT MIDDLEWARE: run before .save() and .create(), not .insertMany()
+tourSchema.pre('save', function(){
+  // This point to currently processed document
+  console.log(this)
 })
 
 const Tour = mongoose.model('Tour', tourSchema)
