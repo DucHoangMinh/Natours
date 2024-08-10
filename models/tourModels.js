@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const slugify = require('slugify')
 
 const tourSchema = new mongoose.Schema({
   name: {
@@ -50,7 +51,14 @@ const tourSchema = new mongoose.Schema({
     default: Date.now(),
     select: false
   },
-  startDates: [Date]
+  startDates: [Date],
+  slug: {
+    type: String
+  },
+  secretTour: {
+    type: Boolean,
+    default: false
+  }
 }, {
   toJSON: {
     virtuals: true,
@@ -64,10 +72,30 @@ tourSchema.virtual('durationWeek').get(function(){
 })
 
 // DOCUMENT MIDDLEWARE: run before .save() and .create(), not .insertMany()
-tourSchema.pre('save', function(){
-  // This point to currently processed document
-  console.log(this)
+// tourSchema.pre('save', function(next){
+//   // This point to currently processed document
+//   this.slug = slugify(this.name, {
+//     lower: true
+//   })
+//   next()
+// })
+// tourSchema.post('save', function(doc,next) {
+//   console.log(doc)
+//   next()
+// })
+
+// QUERY MIDDLEWARE
+tourSchema.pre(/^find/, function(next) {
+  this.find({ secretTour: { $ne: true } })
+  this.start = Date.now()
+  next()
 })
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds`)
+  next()
+})
+
+
 
 const Tour = mongoose.model('Tour', tourSchema)
 module.exports = Tour
